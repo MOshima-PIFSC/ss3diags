@@ -1,0 +1,87 @@
+---
+title: "ss3diags Unit Testing"
+author: "Meg Oshima"
+date: "9/20/2021"
+output: 
+  html_document:
+    theme: simplex  
+    toc: true
+    toc_depth: 2
+    toc_float: true 
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Basics of Unit Testing  
+
+Unit testing verifies that a function is precise and correct when returning the expected value of _y_ for a specific value of _x_ in the function. It is an automated, formal testing of code that is beneficial because there are fewer bugs in your code, better code structure (less redundancy, and smaller separate functions vs fewer complicated ones), and more robust code (less likely to break with big changes).
+
+## Workflow  
+
+### First Time  
+When first creating test files, use the `usethis` package and run the function `usethis::use_testthat()` to:    
+
+  *   create a tests/testthat directory   
+  *   add `testthat` to the `Suggests` field in the `DESCRIPTION` of the package    
+  *   create a file `tests/testthat.R` that automatically runs all tests when you run `R CMD check`.    
+  
+### Routine Workflow    
+After the first time, the workflow should look something like:    
+
+  *   use `testthat::use_test("name-of-function")` to create a test template file in the correct directory. It will be named `test-name-of-function.R`   
+  *   follow the template structure and modify the code as needed to test functions   
+  *   one script can be used for multiple functions, but don't want to make the files too large (consider best ways to organize the functions within scripts)    
+  *   need to know the function you want to test and what the expected outcome should be    
+  *   use `testthat::test_file("./tests/testthat/test-name-of-function.R")` to run the single file to see if the test passed or failed   
+  *   as you add or modify code, continue testing     
+  *   once everything is good, use `devtools::test()` to test the entire package and ensure everything passes   
+  
+### Test file structure   
+
+Tests should be organized hierarchically: *expectations* --> *tests* --> *test.R files*
+
+
+```{r eval=FALSE}
+
+
+## library any other packages you may need
+## include any general code you may need, ie setting environment path
+## Generalized structure of test functions 
+test_that("description of test", {
+  
+  # an expect statement with the function being tested and the expected outcome
+  expect_equal((2+2), 4)
+  expect_equal((3+2), 4)
+  
+})
+
+
+```
+
+
+## ss3diags Tests  
+
+To test the functions in ss3daigs I am creating individual scripts for each function and testing the outputs of those functions for Pacific Hake, Shortfin Mako, and GOB Herring. Test scripts include:  
+
+- [x] runs-test (SSrunstest, SSplotRunstest)
+- [ ] residuals (SSplotJABBAres)
+- [ ] retrospective and forecast bias (SSplotRetro, SShcbias)
+- [ ] hindcast cross-validataion and prediction skills (SSretroComps, SSplotHCxval, SSmase)
+- [ ] model uncertainty (SSplotEnsemble, SSdiagsMCMC, SSplotKobe)
+- [ ] utils (SSsettingsBratioF)
+
+
+## Troubleshooting and Issues  
+
+| Problem     | Solution      |   
+|-------------|---------------|  
+| Opening .Rdata files from package folder | Created a new sub-folder `inst` and `extdata` and copied .Rdata files into there then used `system.file("extdata", package = "ss3diags")` as the testing path. |  
+
+## Questions  
+
+  *   Do I only need to test structure of outputs (e.g. nrow = 4, ncol = 6, class, etc.)?  
+  *   Should I use the actual numbers from output or calculate it so that if the rdata files change, the numbers will change with it? Using actual numbers will tell you if something is wrong with the file/code you currently have but if the models are going to be updated at some point, it is easier to write the code so that it is flexible.  
+  *   Should Failed and Passed be opposite for the runstable? Currently, it says pass if p-value > 0.05. 
+
