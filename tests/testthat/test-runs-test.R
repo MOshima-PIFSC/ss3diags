@@ -1,6 +1,5 @@
 library(ss3diags)
-library(dplyr)
-library(stringr)
+
 library(testthat)
 
 #test_example_path <- system.file("extdata", package = "ss3diags")
@@ -22,11 +21,13 @@ test_that("runs test works with shortfin mako", {
   
   load(file.path(test_example_path, "natl.sma.rdata"))
   
-  test.resids <- ss3sma$cpue %>% 
-    filter(str_detect(Fleet_name, "CPUE_1")) %>% 
-    select(Fleet_name, Yr, Obs, Exp) %>% 
-    mutate(residuals = log(Obs) - log(Exp))
+  # test.resids <- ss3sma$cpue %>% 
+  #   filter(str_detect(Fleet_name, "CPUE_1")) %>% 
+  #   select(Fleet_name, Yr, Obs, Exp) %>% 
+  #   mutate(residuals = log(Obs) - log(Exp))
   
+  test.resids <- ss3sma$cpue[which(ss3sma$cpue$Fleet_name == "CPUE_1"), c("Fleet_name", "Yr", "Obs", "Exp")]
+  test.resids$residuals = log(test.resids$Obs) - log(test.resids$Exp)
   
   mu <- 0 
   mr <- abs(diff(test.resids$residuals - mu))
@@ -44,7 +45,7 @@ test_that("runs test works with shortfin mako", {
   
   ## for cpue
   n.cpue <- sum(str_count(ss3sma$FleetNames, "CPUE_"))
-  run_cpue <- SSrunstest(ss3sma, quant = "cpue")
+  run_cpue <- SSrunstest(ss3sma, quants = "cpue")
   
   ## testing structure of dataframe
   expect_match(run_cpue$Index[1], "CPUE_1")
@@ -55,15 +56,18 @@ test_that("runs test works with shortfin mako", {
   expect_equal(run_cpue$sigma3.hi[1], ucl)
   
   ## specifying cpue index
-  run_cpue <- SSrunstest(ss3sma, quant = "cpue", indexselect = 4)
+  run_cpue <- SSrunstest(ss3sma, quants = "cpue", indexselect = 4)
   expect_match(run_cpue$Index, "CPUE_4")
-  run_cpue <- SSrunstest(ss3sma, quant = "cpue", indexselect = 3:5)
+  run_cpue <- SSrunstest(ss3sma, quants = "cpue", indexselect = 3:5)
   expect_equal(run_cpue$Index, c("CPUE_3", "CPUE_4", "CPUE_5"))
   
   ## for length comp
-  len.test.resids <- ss3sma$lendbase %>% 
-    filter(Fleet == 1) %>% 
-    mutate(indx = paste(Fleet, Yr, Seas))
+  # len.test.resids <- ss3sma$lendbase %>% 
+  #   filter(Fleet == 1) %>% 
+  #   mutate(indx = paste(Fleet, Yr, Seas))
+  
+  len.test.resids <- ss3sma$lendbase[which(ss3sma$lendbase$Fleet == 1),]
+  len.test.resids$indx = paste(len.test.resids$Fleet, len.test.resids$Yr, len.test.resids$Seas)
   
   uind <- unique(len.test.resids$indx)
   pldat <- matrix(0,length(uind),13,
@@ -72,8 +76,8 @@ test_that("runs test works with shortfin mako", {
                                   'ObsloAdj','ObshiAdj','Fleet','Yr','Time','Seas')))
   
   for(i in 1:length(uind)){  
-    subdbase <- len.test.resids %>% 
-      filter(str_detect(indx, uind[i]))
+    subdbase <- len.test.resids[which(len.test.resids$indx == uind[i]),]
+      #filter(str_detect(indx, uind[i]))
     
     if(is.null(subdbase$Nsamp_adj)) subdbase$Nsamp_adj = subdbase$N 
     xvar <- subdbase$Bin
@@ -130,7 +134,7 @@ test_that("runs test works with shortfin mako", {
   
   
   n.fish <- nrow(ss3sma$Length_Comp_Fit_Summary)
-  run_fish <- SSrunstest(ss3sma, quant = "len")
+  run_fish <- SSrunstest(ss3sma, quants = "len")
   
   ## testing structure of dataframe
   expect_match(run_fish$Index[1], "Fishery_1")
@@ -160,10 +164,12 @@ test_that("runs test works with pacific hake", {
   
   load(file.path(test_example_path, "pac.hke.rdata"))
   
-  test.resids <- ss3phk$cpue %>% 
-    select(Fleet_name, Yr, Obs, Exp, Like) %>% 
-    mutate(residuals = ifelse(is.na(Obs) | is.na(Like),NA, log(Obs)-log(Exp)))
-  
+  # test.resids <- ss3phk$cpue %>% 
+  #   select(Fleet_name, Yr, Obs, Exp, Like) %>% 
+  #   mutate(residuals = ifelse(is.na(Obs) | is.na(Like),NA, log(Obs)-log(Exp)))
+  # 
+  test.resids <- ss3phk$cpue[,c("Fleet_name", "Yr", "Obs", "Exp", "Like")]
+  test.resids$residuals <- ifelse(is.na(test.resids$Obs) | is.na(test.resids$Like),NA, log(test.resids$Obs)-log(test.resids$Exp))
   
   mu <- 0
   mr <- abs(diff(test.resids$residuals - mu))
@@ -193,9 +199,12 @@ test_that("runs test works with pacific hake", {
   
   
   ## for age comp
-  age.test.resids <- ss3phk$agedbase %>% 
-    filter(Fleet == 2) %>% 
-    mutate(indx = paste(Fleet, Yr, Seas))
+  # age.test.resids <- ss3phk$agedbase %>% 
+  #   filter(Fleet == 2) %>% 
+  #   mutate(indx = paste(Fleet, Yr, Seas))
+  
+  age.test.resids <- ss3phk$agedbase[which(ss3phk$agedbase$Fleet == 2),]
+  age.test.resids$indx <- paste(age.test.resids$Fleet, age.test.resids$Yr, age.test.resids$Seas)
   
   uind <- unique(age.test.resids$indx)
   pldat <- matrix(0,length(uind),13,
