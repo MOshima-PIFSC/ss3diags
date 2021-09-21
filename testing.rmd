@@ -73,6 +73,13 @@ To test the functions in ss3daigs I am creating individual scripts for each func
 - [ ] utils (SSsettingsBratioF)
 
 
+## Continuous Integration with Github Actions  
+
+Workflows can be setup to automate certain processes when a specifed event occurs. Events could include things such as an issue being opened, a push to the repo, or a pull request. When one of these events happens, it triggers one or more actions automatically. An example workflow would be: commit new code --> run test automatically --> build new package --> deploy new version of package.  
+
+Currently, I set up the workflow for the first two steps; every time a new commit is made to the repo, it runs the R CMD check function and checks all of the test.R scripts. The workflow file is stored in `.github/workflows/R-CMD-check.yml`.
+
+
 ## Troubleshooting and Issues  
 
 | Problem     | Solution      |   
@@ -83,5 +90,4 @@ To test the functions in ss3daigs I am creating individual scripts for each func
 
   *   Do I only need to test structure of outputs (e.g. nrow = 4, ncol = 6, class, etc.)?  
   *   Should I use the actual numbers from output or calculate it so that if the rdata files change, the numbers will change with it? Using actual numbers will tell you if something is wrong with the file/code you currently have but if the models are going to be updated at some point, it is easier to write the code so that it is flexible.  
-  *   Should Failed and Passed be opposite for the runstable? Currently, it says pass if p-value > 0.05. 
 
