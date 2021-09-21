@@ -1,5 +1,5 @@
 library(ss3diags)
-
+library(stringr)
 library(testthat)
 
 #test_example_path <- system.file("extdata", package = "ss3diags")
@@ -12,7 +12,7 @@ test_that("sma.Rdata has correct files", {
   
   load(file.path(test_example_path, "natl.sma.rdata"))
   expect_equal(length(ls(pattern = "sma")), 3)
-  expect_equal(str_detect(ls(pattern = "sma"), c("ss3|aspm|retro")), rep(TRUE, 3))
+  expect_match(ls(pattern = "sma"), c("ss3|aspm|retro"))
   
 })
 
@@ -20,11 +20,6 @@ test_that("sma.Rdata has correct files", {
 test_that("runs test works with shortfin mako", {
   
   load(file.path(test_example_path, "natl.sma.rdata"))
-  
-  # test.resids <- ss3sma$cpue %>% 
-  #   filter(str_detect(Fleet_name, "CPUE_1")) %>% 
-  #   select(Fleet_name, Yr, Obs, Exp) %>% 
-  #   mutate(residuals = log(Obs) - log(Exp))
   
   test.resids <- ss3sma$cpue[which(ss3sma$cpue$Fleet_name == "CPUE_1"), c("Fleet_name", "Yr", "Obs", "Exp")]
   test.resids$residuals = log(test.resids$Obs) - log(test.resids$Exp)
@@ -44,7 +39,7 @@ test_that("runs test works with shortfin mako", {
   test.p <- round(runstest$p.value, 3)
   
   ## for cpue
-  n.cpue <- sum(str_count(ss3sma$FleetNames, "CPUE_"))
+  n.cpue <- length(unique(ss3sma$cpue$Fleet))
   run_cpue <- SSrunstest(ss3sma, quants = "cpue")
   
   ## testing structure of dataframe
@@ -77,8 +72,7 @@ test_that("runs test works with shortfin mako", {
   
   for(i in 1:length(uind)){  
     subdbase <- len.test.resids[which(len.test.resids$indx == uind[i]),]
-      #filter(str_detect(indx, uind[i]))
-    
+     
     if(is.null(subdbase$Nsamp_adj)) subdbase$Nsamp_adj = subdbase$N 
     xvar <- subdbase$Bin
     pldat[i,'Obsmn'] <- sum(subdbase$Obs*xvar)/sum(subdbase$Obs)
@@ -155,7 +149,7 @@ test_that("pac.hke.Rdata has correct files", {
   
   load(file.path(test_example_path, "pac.hke.rdata"))
   expect_equal(length(ls(pattern = "phk")), 3)
-  expect_equal(str_detect(ls(pattern = "phk"), c("ss3|aspm|retro")), rep(TRUE, 3))
+  expect_match(ls(pattern = "phk"), c("ss3|aspm|retro"))
   
 })
 
@@ -164,10 +158,7 @@ test_that("runs test works with pacific hake", {
   
   load(file.path(test_example_path, "pac.hke.rdata"))
   
-  # test.resids <- ss3phk$cpue %>% 
-  #   select(Fleet_name, Yr, Obs, Exp, Like) %>% 
-  #   mutate(residuals = ifelse(is.na(Obs) | is.na(Like),NA, log(Obs)-log(Exp)))
-  # 
+ 
   test.resids <- ss3phk$cpue[,c("Fleet_name", "Yr", "Obs", "Exp", "Like")]
   test.resids$residuals <- ifelse(is.na(test.resids$Obs) | is.na(test.resids$Like),NA, log(test.resids$Obs)-log(test.resids$Exp))
   
@@ -199,10 +190,6 @@ test_that("runs test works with pacific hake", {
   
   
   ## for age comp
-  # age.test.resids <- ss3phk$agedbase %>% 
-  #   filter(Fleet == 2) %>% 
-  #   mutate(indx = paste(Fleet, Yr, Seas))
-  
   age.test.resids <- ss3phk$agedbase[which(ss3phk$agedbase$Fleet == 2),]
   age.test.resids$indx <- paste(age.test.resids$Fleet, age.test.resids$Yr, age.test.resids$Seas)
   
@@ -213,8 +200,7 @@ test_that("runs test works with pacific hake", {
                                   'ObsloAdj','ObshiAdj','Fleet','Yr','Time','Seas')))
   
   for(i in 1:length(uind)){  
-    subdbase <- age.test.resids %>% 
-      filter(str_detect(indx, uind[i]))
+    subdbase <- age.test.resids[which(age.test.resids$indx == uind[i]),]
     
     if(is.null(subdbase$Nsamp_adj)) subdbase$Nsamp_adj = subdbase$N 
     xvar <- subdbase$Bin
@@ -284,9 +270,3 @@ test_that("runs test works with pacific hake", {
 })
 
 
-## SSplotRunstest(ss3sma)
-
-
-
-
-## SSplotJABBAres(ss3sma)
